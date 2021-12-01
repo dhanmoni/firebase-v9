@@ -1,7 +1,11 @@
 // console.log("Welcome to firebase v9 from index.js")
 import {initializeApp} from 'firebase/app'
 
-import {getFirestore, collection, getDocs} from 'firebase/firestore'
+import {
+  getFirestore, collection, getDocs,
+  addDoc, deleteDoc, doc, updateDoc,
+  onSnapshot
+} from 'firebase/firestore'
 
 
 const firebaseConfig = {
@@ -22,13 +26,69 @@ const db = getFirestore()
 //collection ref
 const colRef = collection(db, 'books')
 
-//get firestore data
-getDocs(colRef)
-  .then(snapshot=> {
-    let books = [];
-    snapshot.docs.forEach(doc=> {
-      books.push({...doc.data(), id: doc.id})
-    })
-    console.log(books)
+
+// ####### get firestore data using async await ######
+// const getDataFromServer = async (colRef) => {
+//   const snapshots = await getDocs(colRef)
+//   let books= [];
+//   snapshots.docs.forEach(doc=> {
+//     books.push({...doc.data(), id: doc.id})
+//   })
+//   console.log(books)
+// }
+
+// getDataFromServer(colRef)
+
+// ####### get firestore data using callbacks #######
+// getDocs(colRef)
+//   .then(snapshot=> {
+//     let books= [];
+//     snapshot.docs.forEach(doc=> {
+//       books.push({...doc.data(), id: doc.id})
+//     })
+//     console.log(books)
+//   })
+//   .catch(err=>console.log(err))
+
+
+// ####### real time data #######
+onSnapshot(colRef, (snapshot)=> {
+  let books= [];
+  snapshot.docs.forEach(doc=> {
+    books.push({...doc.data(), id: doc.id})
   })
-  .catch(err=>console.log(err))
+  console.log(books)
+})
+
+
+// adding documents
+const addBookForm = document.querySelector('.add')
+addBookForm.addEventListener('submit', async e=> {
+  e.preventDefault();
+  await addDoc(colRef, {
+    title: addBookForm.title.value,
+    author: addBookForm.author.value
+  })
+  addBookForm.reset()
+})
+
+
+// adding documents
+const deleteBookForm = document.querySelector('.delete')
+deleteBookForm.addEventListener('submit', async e=> {
+  e.preventDefault();
+  const docRef = doc(db, 'books', deleteBookForm.id.value)
+  await deleteDoc(docRef)
+  deleteBookForm.reset()
+})
+
+//update document
+const updateBookForm = document.querySelector('.update')
+updateBookForm.addEventListener('submit', async e=> {
+  e.preventDefault()
+  const docRef = doc(db, 'books', updateBookForm.id.value);
+  await updateDoc(docRef, {
+    title: updateBookForm.newTitle.value
+  })
+  updateBookForm.reset()
+})
