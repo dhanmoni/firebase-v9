@@ -4,7 +4,9 @@ import {initializeApp} from 'firebase/app'
 import {
   getFirestore, collection, getDocs,
   addDoc, deleteDoc, doc, updateDoc,
-  onSnapshot
+  onSnapshot,
+  query, where, orderBy, serverTimestamp,
+  getDoc
 } from 'firebase/firestore'
 
 
@@ -50,9 +52,12 @@ const colRef = collection(db, 'books')
 //   })
 //   .catch(err=>console.log(err))
 
+// make a query and use it inside the onSnapshot funtion instead of colRef
+// const q = query(colRef, where('author', '==', 'Dhanmoni Nath'))
+const custom_query = query(colRef, orderBy('createdAt'))
 
 // ####### real time data #######
-onSnapshot(colRef, (snapshot)=> {
+onSnapshot(custom_query, (snapshot)=> {
   let books= [];
   snapshot.docs.forEach(doc=> {
     books.push({...doc.data(), id: doc.id})
@@ -67,7 +72,8 @@ addBookForm.addEventListener('submit', async e=> {
   e.preventDefault();
   await addDoc(colRef, {
     title: addBookForm.title.value,
-    author: addBookForm.author.value
+    author: addBookForm.author.value,
+    createdAt: serverTimestamp()
   })
   addBookForm.reset()
 })
@@ -92,3 +98,10 @@ updateBookForm.addEventListener('submit', async e=> {
   })
   updateBookForm.reset()
 })
+
+// get single document and subscibe to changes using onSnapshot
+// const docRef = doc(db, 'books', 'nFxdvngZ7A3a9uYWF6jg')
+
+// onSnapshot(docRef, (doc)=> {
+//   console.log(doc.data())
+// })
