@@ -9,14 +9,21 @@ import {
   getDoc
 } from 'firebase/firestore'
 
+import {
+  getAuth,
+  createUserWithEmailAndPassword,
+  signOut,
+  signInWithEmailAndPassword,
+  onAuthStateChanged
+} from 'firebase/auth'
 
 const firebaseConfig = {
-  apiKey: "AIzaSyC8CEIALd7kjuUaUEhVOLI5oBxHTUGzBfw",
-  authDomain: "ninja-cloud-functions-f1052.firebaseapp.com",
-  projectId: "ninja-cloud-functions-f1052",
-  storageBucket: "ninja-cloud-functions-f1052.appspot.com",
-  messagingSenderId: "307744957213",
-  appId: "1:307744957213:web:92a31a7d3fd526e57eb7f4"
+  apiKey: process.env.API_KEY,
+  authDomain: process.env.AUTH_DOMAIN,
+  projectId: process.env.PROJECT_ID,
+  storageBucket: process.env.STORAGE_BUCKET,
+  messagingSenderId: process.env.MSG_SENDER_ID,
+  appId: process.env.APP_ID
 };
 
 //initialize app
@@ -24,6 +31,7 @@ initializeApp(firebaseConfig)
 
 //init service
 const db = getFirestore()
+const auth = getAuth()
 
 //collection ref
 const colRef = collection(db, 'books')
@@ -105,3 +113,58 @@ updateBookForm.addEventListener('submit', async e=> {
 // onSnapshot(docRef, (doc)=> {
 //   console.log(doc.data())
 // })
+
+
+// ##### Firebase Auth ######
+
+const signupForm = document.querySelector('.signup')
+signupForm.addEventListener('submit', async (e)=> {
+  e.preventDefault();
+
+  const email = signupForm.email.value
+  const password = signupForm.password.value
+
+  try {
+    const cred = await createUserWithEmailAndPassword(auth, email, password)
+    // console.log(cred.user)
+    signupForm.reset()
+  } catch (error) {
+    console.log(error)
+  }
+})
+
+
+const logoutBtn = document.querySelector('.logout')
+logoutBtn.addEventListener('click', async(e)=> {
+  try {
+    await signOut(auth)
+    console.log('user signed out')
+  } catch (error) {
+    console.log(error)
+  }
+})
+
+onAuthStateChanged(auth, (user)=> {
+  console.log('User status changed', user)
+  if(!user){
+    logoutBtn.style.display = 'none';
+  } else {
+    logoutBtn.style.display = 'block';
+  }
+})
+
+const loginForm = document.querySelector('.login')
+loginForm.addEventListener('submit', async (e)=> {
+  e.preventDefault();
+
+  const email = loginForm.email.value
+  const password = loginForm.password.value
+
+  try {
+    const cred = await signInWithEmailAndPassword(auth, email, password)
+    // console.log(cred.user)
+    loginForm.reset()
+  } catch (error) {
+    console.log(error)
+  }
+})
